@@ -24,7 +24,7 @@ History
                     <td class="text-start">{{ loop.index }}</td>
                     <td class="text-start">{{ history.katakunci }}</td>
                     <td>{{ history.created_at }}</td>
-                    <td class="text-start"><button class="btn btn-primary">Lihat</button></td>
+                    <td class="text-start"><form action="/lihat-history" method="post"> {% csrf_token %}<input type="hidden" name="history_id" value="{{ history.id }}"><button class="btn btn-primary" type="submit">Lihat</button></form></td>
                 </tr>
                 {% endfor %}
                 {% else %}

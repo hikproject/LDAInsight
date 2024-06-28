@@ -137,3 +137,16 @@ def preprocess(title):
     tokens = [word for word in tokens if word not in stop_words]  # Remove stopwords
     tokens = [stemmer.stem(word) for word in tokens]  # Stem
     return tokens
+
+def view_history(request):
+    id_history = request.POST.get('history_id')
+    history = History.objects.get(id=id_history)
+    data_berita = DataBerita.objects.filter(id_history=id_history)
+    hasil_lda = HasilLDA.objects.get(id_history=id_history)
+    katakunci = history.katakunci
+    context = {
+        'keyword': katakunci,
+        'data_berita': data_berita,
+        'hasil_lda': hasil_lda,
+    }
+    return render(request, "hasil.html", context)
