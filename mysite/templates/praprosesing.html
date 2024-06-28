@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}
+Praproses Data
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4" style="margin-top: 200px;">
+    <h2 class="text-center mb-4">Data Berita</h2>
+    <h2 class="text-center mb-4">Kata Kunci Pencarian : {{katakunci}}</h2>
+    <div class="table-responsive">
+        <table id="newsTable" class="table table-striped table-bordered">
+            <thead class="thead-dark">
+                <tr>
+                    <th class="text-start">No</th>
+                    <th class="text-start">Judul Berita</th>
+                    <th class="text-start">Url</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for berita in databerita %}
+                <tr>
+                    <td></td>
+                    <td>{{ berita.judul }}</td>
+                    <td><a href="{{ berita.url }}" target="_blank" rel="noopener noreferrer">{{ berita.url }}</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <form action="{% url 'proseslda' %}" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="id_history" value="{{ history_id }}">
+        <input type="hidden" name="keyword" value="{{ katakunci }}">
+        <button type="submit" class="btn btn-primary">Proses Data</button>
+    </form>
+</div>
+<script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4="
+    crossorigin="anonymous"></script>
+<script>
+    $(document).ready(function () {
+        var t = $('#newsTable').DataTable({
+            rowReorder: {
+                selector: 'td:nth-child(2)'
+            },
+            responsive: true,
+            stateSave: true,
+            columnDefs: [{
+                searchable: true,
+                orderable: true,
+                targets: 0,
+            }, {
+                searchable: true,
+                orderable: true,
+                targets: [1, 2],
+            }],
+            order: [
+                [0, 'asc']
+            ],
+            initComplete: function () {
+                this.api().columns().every(function () {
+                    var column = this;
+                    var select = $('<select><option value="">Pilih</option></select>')
+                        .appendTo($(column.footer()).empty())
+                        .on('change', function () {
+                            var val = $.fn.dataTable.util.escapeRegex(
+                                $(this).val()
+                            );
+
+                            column
+                                .search(val ? '^' + val + '$' : '', true, false)
+                                .draw();
+                        });
+
+                    column.data().unique().sort().each(function (d) {
+                        select.append('<option value="' + d + '">' + d +
+                            '</option>');
+                    });
+                });
+            }
+        });
+
+        t.on('order.dt search.dt', function () {
+            let i = 1;
+
+            t.cells(null, 0, {
+                search: 'applied',
+                order: 'applied'
+            }).every(function (cell) {
+                this.data(i++);
+            });
+        }).draw();
+    });
+</script>
+{% endblock %}

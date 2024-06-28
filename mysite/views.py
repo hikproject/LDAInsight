@@ -11,6 +11,9 @@ from gensim import corpora
 from gensim.models.ldamodel import LdaModel
 from gensim.models.coherencemodel import CoherenceModel
 from django.http import JsonResponse
+import google.generativeai as genai
+import os
+import markdown
 
 # Create your views here.
 def index(request):
@@ -32,16 +35,17 @@ def proses(request):
         databerita = ambil_data(history,katakunci)
         context = {
             'katakunci': katakunci,
+            'history_id':history.id,
             'databerita': databerita,
         }
-        return render(request, "hasil.html", context)
+        return render(request, "praprosesing.html", context)
     else:
         return redirect("/")
 
 def ambil_data(history, katakunci):
     # Set the base URL and parameters
     base_url = 'https://api.thenewsapi.com/v1/news/all'
-    api_token = 'jb56FJnpBuKyePDAyc7iJbgEHaF4ZvdKG4YNpNHP'
+    api_token = 'AOFwVOaQHYhU0tf3RhAIyD8JYt4N3YohhCox5Ytm'
     language = 'id'
     search = katakunci
     # Inisialisasi DataFrame untuk menyimpan data
@@ -72,18 +76,21 @@ def ambil_data(history, katakunci):
 
 def topic_modeling(request):
     if request.method == 'POST':
-        databerita = request.POST.get('databerita')
+        id_history = request.POST.get('id_history')
+        keyword = request.POST.get('keyword')
+        # Ambil data berita berdasarkan id_history
+        data_berita = DataBerita.objects.filter(id_history=id_history)
         # Preprocess the titles
         stop_words = set(stopwords.words('indonesian'))
         factory = StemmerFactory()
         stemmer = factory.create_stemmer()
-        processed_titles = [preprocess(title) for title in databerita.split(',')]
+        processed_titles = [preprocess(berita.judul) for berita in data_berita]
         
         # Create dictionary and corpus
         dictionary = corpora.Dictionary(processed_titles)
         corpus = [dictionary.doc2bow(text) for text in processed_titles]
         # Try different number of topics and find the one with the highest coherence score
-        max_topics = 20  # Maximum number of topics to try
+        max_topics = 5  # Maximum number of topics to try
         best_coherence = -1
         best_num_topics = 1
 
@@ -101,8 +108,25 @@ def topic_modeling(request):
 
         # Return the topics and coherence score via AJAX
         topics = lda_model.print_topics(num_words=5)
-        return JsonResponse({'topics': topics, 'coherence_score': best_coherence, 'num_topics': best_num_topics})
-
+        genai.configure(api_key="AIzaSyAW7cMj9RA0jWDq1oS1bkfrkLtV0Ltc2S8")
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content("Tolong analisis secara jelas hasil lda ini menggunakan bahasa indonesia" + str(topics) + "yang dimana hasil dari pencarian berita dengan kata kunci"+str(keyword)+ "dengan Coherence Score sebesar"+str(best_coherence)+"dan beri saya kesimpulannya")
+        # Simpan ke model HasilLDA dengan format yang diinginkan
+        history_instance = History.objects.get(id=id_history)
+        hasil_lda = HasilLDA.objects.create(
+            id_history=history_instance,
+            num_topics=best_num_topics,
+            coherence_score = best_coherence,
+            hasil="\n".join([f"Topic {i+1}: {topic}" for i, topic in enumerate(topics)]),
+            analisis=markdown.markdown(response.text)
+        )
+        context = {
+            'keyword': keyword,
+            'data_berita': data_berita,
+            'hasil_lda': hasil_lda,
+        }
+        return render(request, "hasil.html", context)
+    
 def preprocess(title):
     # Preprocess the titles
     factory = StemmerFactory()
