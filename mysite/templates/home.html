@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}
+Home
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-center align-items-center" style="height: 70vh;">
+    <div class="card" style="width: 30rem;">
+        <div class="card-body text-center">
+            <h5 class="card-title"><i class="bi bi-search"></i> Pencarian Topik Dalam Judul Berita Menggunakan LDA</h5>
+            <form class="form-inline my-2 my-lg-0" action="proses" method="post">
+                <div class="input-group">
+                    {% csrf_token %}
+                    <input class="form-control" type="search" placeholder="Cari judul berita..." aria-label="Search" name="katakunci">
+                    <button class="btn btn-outline-success" type="submit"><i class="bi bi-search"></i> Cari</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

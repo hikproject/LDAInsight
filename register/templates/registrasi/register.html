@@ -1,0 +1,12 @@
+{% extends 'baseauth.html' %}
+{% block title %} Create account {% endblock %}
+{% block judul %} Create account {% endblock %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <form action="" method="post" class="form-group" id="registerForm">
+        {{form|crispy}}
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success">Register</button>
+    </form>
+{% endblock %}
+
