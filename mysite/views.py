@@ -45,7 +45,7 @@ def proses(request):
 def ambil_data(history, katakunci):
     # Set the base URL and parameters
     base_url = 'https://api.thenewsapi.com/v1/news/all'
-    api_token = 'AOFwVOaQHYhU0tf3RhAIyD8JYt4N3YohhCox5Ytm'
+    api_token = 'yaS6CvvuqA8MZdW4Qjguj2OYyW4GjfBuiFbDkV2Y'
     language = 'id'
     search = katakunci
     # Inisialisasi DataFrame untuk menyimpan data

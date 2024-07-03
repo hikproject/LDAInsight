@@ -18,11 +18,7 @@ class History(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
-<<<<<<< HEAD
-        return f"{self.user_id} - {self.katakunci}"
-=======
         return f"{self.username} - {self.katakunci}"
->>>>>>> dev
     
 class HasilLDA(models.Model):
     id = models.AutoField(primary_key=True)
