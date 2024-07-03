@@ -23,14 +23,14 @@ def index(request):
         return redirect("/login")
 
 def history(request):
-    histories = History.objects.filter(user_id=request.user.id)
+    histories = History.objects.filter(username=request.user.username)
     context = {'histories': histories}
     return render(request, "history.html", context)
 
 def proses(request):
     if request.method == 'POST':
         katakunci = request.POST.get('katakunci')
-        history = History(user_id=request.user.id, katakunci=katakunci)
+        history = History(username=request.user.username, katakunci=katakunci)
         history.save()
         databerita = ambil_data(history,katakunci)
         context = {
@@ -51,7 +51,7 @@ def ambil_data(history, katakunci):
     # Inisialisasi DataFrame untuk menyimpan data
     df = pd.DataFrame()
     # Loop untuk mengambil data sebanyak 100 kali
-    for page in range(1, 6):
+    for page in range(1, 101):
         # Define the parameters for the request
         params = {
             'api_token': api_token,

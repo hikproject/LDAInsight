@@ -81,7 +81,7 @@ WSGI_APPLICATION = 'LDA.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'lda',        # Nama database MySQL Anda
+        'NAME': 'tugas_akhir',        # Nama database MySQL Anda
         'USER': 'root',                 # Username MySQL (default XAMPP adalah 'root')
         'PASSWORD': '',                 # Password MySQL (default XAMPP kosong)
         'HOST': 'localhost',            # Alamat host
