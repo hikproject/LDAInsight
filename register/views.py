@@ -20,3 +20,7 @@ def ubah_password(response):
     else:
         form = UbahPasswordForm(response.user)
     return render(response, "registrasi/ubahpassword.html", {"form": form})
+<<<<<<< HEAD
+=======
+
+>>>>>>> dev

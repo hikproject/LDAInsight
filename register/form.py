@@ -1,4 +1,8 @@
 from django import forms
+<<<<<<< HEAD
+=======
+from django.contrib.auth import login,authenticate
+>>>>>>> dev
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 

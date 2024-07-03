@@ -23,14 +23,14 @@ def index(request):
         return redirect("/login")
 
 def history(request):
-    histories = History.objects.filter(user_id=request.user.id)
+    histories = History.objects.filter(username=request.user.username)
     context = {'histories': histories}
     return render(request, "history.html", context)
 
 def proses(request):
     if request.method == 'POST':
         katakunci = request.POST.get('katakunci')
-        history = History(user_id=request.user.id, katakunci=katakunci)
+        history = History(username=request.user.username, katakunci=katakunci)
         history.save()
         databerita = ambil_data(history,katakunci)
         context = {
