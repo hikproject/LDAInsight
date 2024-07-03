@@ -51,7 +51,7 @@ def ambil_data(history, katakunci):
     # Inisialisasi DataFrame untuk menyimpan data
     df = pd.DataFrame()
     # Loop untuk mengambil data sebanyak 100 kali
-    for page in range(1, 6):
+    for page in range(1, 101):
         # Define the parameters for the request
         params = {
             'api_token': api_token,
@@ -90,7 +90,7 @@ def topic_modeling(request):
         dictionary = corpora.Dictionary(processed_titles)
         corpus = [dictionary.doc2bow(text) for text in processed_titles]
         # Try different number of topics and find the one with the highest coherence score
-        max_topics = 5  # Maximum number of topics to try
+        max_topics = 20  # Maximum number of topics to try
         best_coherence = -1
         best_num_topics = 1
 
