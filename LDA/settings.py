@@ -81,7 +81,7 @@ WSGI_APPLICATION = 'LDA.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'tugas_akhir',        # Nama database MySQL Anda
+        'NAME': 'LDAInsight',        # Nama database MySQL Anda
         'USER': 'root',                 # Username MySQL (default XAMPP adalah 'root')
         'PASSWORD': '',                 # Password MySQL (default XAMPP kosong)
         'HOST': 'localhost',            # Alamat host
@@ -139,3 +139,7 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/login/"
+
+# configurasi API
+THENEWSAPI_TOKEN = 'Xb1ii3uItI38zKUOdSnreBXtlg6qreYt0Vax1WXD'
+GENAI_API_KEY = 'AIzaSyAW7cMj9RA0jWDq1oS1bkfrkLtV0Ltc2S8'

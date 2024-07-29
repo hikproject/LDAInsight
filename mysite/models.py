@@ -24,7 +24,8 @@ class HasilLDA(models.Model):
     id = models.AutoField(primary_key=True)
     id_history = models.ForeignKey('History', on_delete=models.CASCADE)
     num_topics = models.IntegerField()
-    coherence_score = models.DecimalField(max_digits=10, decimal_places=2)
+    coherence_score = models.DecimalField(max_digits=10, decimal_places=4)
+    perplexity = models.DecimalField(max_digits=10, decimal_places=4)
     hasil = models.TextField()
     analisis = models.TextField()
     

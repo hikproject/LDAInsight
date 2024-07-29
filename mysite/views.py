@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect
 from django_pandas.io import read_frame
+from django.conf import settings
 from .models import History, HasilLDA, DataBerita
 import requests
+import numpy as np
 import pandas as pd
 import nltk
 from nltk.corpus import stopwords
@@ -23,11 +25,27 @@ def index(request):
         return redirect("/login")
 
 def history(request):
-    histories = History.objects.filter(username=request.user.username)
-    context = {'histories': histories}
+    # Mengambil semua History untuk user yang sedang login
+    histories = History.objects.filter(username=request.user.username).prefetch_related('hasillda_set')
+    # Menyiapkan data untuk dikirim ke template
+    history_data = []
+    for history in histories:
+        hasil_lda = history.hasillda_set.first()
+        history_data.append({
+            'id': history.id,
+            'katakunci': history.katakunci,
+            'created_at': history.created_at,
+            'num_topics': hasil_lda.num_topics if hasil_lda else None,
+            'coherence_score': hasil_lda.coherence_score if hasil_lda else None,
+        })
+    
+    context = {
+        'history_data': history_data,
+    }
+    
     return render(request, "history.html", context)
 
-def proses(request):
+def cari_data(request):
     if request.method == 'POST':
         katakunci = request.POST.get('katakunci')
         history = History(username=request.user.username, katakunci=katakunci)
@@ -45,7 +63,7 @@ def proses(request):
 def ambil_data(history, katakunci):
     # Set the base URL and parameters
     base_url = 'https://api.thenewsapi.com/v1/news/all'
-    api_token = 'yaS6CvvuqA8MZdW4Qjguj2OYyW4GjfBuiFbDkV2Y'
+    api_token = settings.THENEWSAPI_TOKEN
     language = 'id'
     search = katakunci
     # Inisialisasi DataFrame untuk menyimpan data
@@ -81,43 +99,55 @@ def topic_modeling(request):
         # Ambil data berita berdasarkan id_history
         data_berita = DataBerita.objects.filter(id_history=id_history)
         # Preprocess the titles
-        stop_words = set(stopwords.words('indonesian'))
-        factory = StemmerFactory()
-        stemmer = factory.create_stemmer()
         processed_titles = [preprocess(berita.judul) for berita in data_berita]
         
         # Create dictionary and corpus
         dictionary = corpora.Dictionary(processed_titles)
         corpus = [dictionary.doc2bow(text) for text in processed_titles]
         # Try different number of topics and find the one with the highest coherence score
-        max_topics = 20  # Maximum number of topics to try
-        best_coherence = -1
+        max_topics = 10  # Maximum number of topics to try
+        best_coherence = float('-inf')
         best_num_topics = 1
-
+        results = {}  # Dictionary to store the results
         for num_topics in range(1, max_topics + 1):
-            lda_model = LdaModel(corpus, num_topics=num_topics, id2word=dictionary, passes=10)
+            alpha = 50 / num_topics
+            lda_model = LdaModel(corpus, num_topics=num_topics, id2word=dictionary, passes=30, alpha = alpha, eta = 0.01,random_state=42)
             coherence_model_lda = CoherenceModel(model=lda_model, texts=processed_titles, dictionary=dictionary, coherence='c_v')
             coherence_lda = coherence_model_lda.get_coherence()
 
+            # Store the results
+            results[num_topics] = {
+                'coherence_score': coherence_lda,
+                'model': lda_model
+            }
             if coherence_lda > best_coherence:
                 best_coherence = coherence_lda
                 best_num_topics = num_topics
 
-        # Train LDA model with the best number of topics
-        lda_model = LdaModel(corpus, num_topics=best_num_topics, id2word=dictionary, passes=10)
+        # Access the LDA model with the best parameters
+        best_lda_model = results[best_num_topics]['model']
+        best_coherence_model_lda = CoherenceModel(model=best_lda_model, texts=processed_titles, dictionary=dictionary, coherence='c_v')
+        best_coherence_lda = best_coherence_model_lda.get_coherence()
 
-        # Return the topics and coherence score via AJAX
-        topics = lda_model.print_topics(num_words=5)
-        genai.configure(api_key="AIzaSyAW7cMj9RA0jWDq1oS1bkfrkLtV0Ltc2S8")
+        # Print the topics from the best LDA model
+        best_topics = best_lda_model.print_topics(num_words=5)
+
+        # Menghitung log perplexity
+        log_perplexity = best_lda_model.log_perplexity(corpus)
+        # Menghitung eksponensial dari log perplexity
+        perplexity_exp = np.exp(-log_perplexity)
+
+        genai.configure(api_key= settings.GENAI_API_KEY )
         model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content("Tolong analisis secara jelas hasil lda ini menggunakan bahasa indonesia" + str(topics) + "yang dimana hasil dari pencarian berita dengan kata kunci"+str(keyword)+ "dengan Coherence Score sebesar"+str(best_coherence)+"dan beri saya kesimpulannya")
+        response = model.generate_content("Tolong analisis secara jelas hasil LDA ini menggunakan bahasa indonesia :" + str(best_topics) + "Hasil dari pencarian berita dengan kata kunci"+str(keyword)+ "menunjukkan nilai c_v Coherence Score sebesar"+str(best_coherence_lda)+"Berikan kesimpulannya.")
         # Simpan ke model HasilLDA dengan format yang diinginkan
         history_instance = History.objects.get(id=id_history)
         hasil_lda = HasilLDA.objects.create(
             id_history=history_instance,
             num_topics=best_num_topics,
-            coherence_score = best_coherence,
-            hasil="\n".join([f"Topic {i+1}: {topic}" for i, topic in enumerate(topics)]),
+            coherence_score = best_coherence_lda,
+            perplexity = perplexity_exp,
+            hasil="\n".join([f"Topic {i+1}: {topic}" for i, topic in enumerate(best_topics)]),
             analisis=markdown.markdown(response.text)
         )
         context = {
@@ -127,11 +157,12 @@ def topic_modeling(request):
         }
         return render(request, "hasil.html", context)
     
+# Preprocess the titles
+factory = StemmerFactory()
+stop_words = set(stopwords.words('indonesian'))
+stemmer = factory.create_stemmer()
+
 def preprocess(title):
-    # Preprocess the titles
-    factory = StemmerFactory()
-    stop_words = set(stopwords.words('indonesian'))
-    stemmer = factory.create_stemmer()
     tokens = word_tokenize(title.lower())
     tokens = [word for word in tokens if word.isalnum()]  # Remove punctuation
     tokens = [word for word in tokens if word not in stop_words]  # Remove stopwords

@@ -14,21 +14,31 @@ History
                     <th class="text-start">No</th>
                     <th class="text-start">Kata Kunci</th>
                     <th class="text-start">Tanggal</th>
+                    <th class="text-start">Jumlah topik</th>
+                    <th class="text-start">Coherence Score</th>
                     <th class="text-start">Action</th>
                 </tr>
             </thead>
             <tbody>
-                {% if histories %}
-                {% for history in histories %}
-                <tr>
-                    <td class="text-start">{{ loop.index }}</td>
-                    <td class="text-start">{{ history.katakunci }}</td>
-                    <td>{{ history.created_at }}</td>
-                    <td class="text-start"><form action="/lihat-history" method="post"> {% csrf_token %}<input type="hidden" name="history_id" value="{{ history.id }}"><button class="btn btn-primary" type="submit">Lihat</button></form></td>
-                </tr>
-                {% endfor %}
+                {% if history_data %}
+                    {% for history in history_data %}
+                    <tr>
+                        <td class="text-start">{{ forloop.counter }}</td>
+                        <td class="text-start">{{ history.katakunci }}</td>
+                        <td class="text-start">{{ history.created_at|date:"d/m/Y H:i" }}</td>
+                        <td class="text-start">{{ history.num_topics|default_if_none:"-" }}</td>
+                        <td class="text-start">{{ history.coherence_score|default_if_none:"-"|floatformat:4 }}</td>
+                        <td class="text-start">
+                            <form action="/lihat-history" method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="history_id" value="{{ history.id }}">
+                                <button class="btn btn-primary" type="submit">Lihat</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
                 {% else %}
-                
+                    
                 {% endif %}
             </tbody>
         </table>

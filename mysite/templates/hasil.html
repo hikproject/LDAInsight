@@ -10,7 +10,7 @@
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">Kata Kunci: {{ keyword }}</h5>
-                    <p class="card-text">Hasil analisis LDA untuk kata kunci "{{ keyword }}" dengan Coherence Score sebesar {{ hasil_lda.coherence_score }}.</p>
+                    <p class="card-text">Hasil analisis LDA untuk kata kunci "{{ keyword }}" dengan Coherence Score sebesar {{ hasil_lda.coherence_score }} dan nilai perplexity sebesar {{hasil_lda.perplexity}}</p>
                     <hr>
                     <h5 class="card-title">Topik yang Ditemukan</h5>
                     <div class="alert alert-info">
